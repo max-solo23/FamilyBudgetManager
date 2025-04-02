@@ -1,3 +1,5 @@
+using FamilyBudgetManager.TransactionsRepository;
+
 namespace FamilyBudgetManager
 {
     internal static class Program
@@ -6,7 +8,8 @@ namespace FamilyBudgetManager
         static void Main()
         {
             ApplicationConfiguration.Initialize();
-            Application.Run(new BudgetManagerForm());
+            Application.Run(new BudgetManagerForm(
+                new SqliteTransactionRepository()));
         }
     }
 }

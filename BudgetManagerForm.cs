@@ -1,14 +1,15 @@
 using System.Data;
-using System.Data.SQLite;
+using System.Windows.Forms;
+using FamilyBudgetManager.TransactionsRepository;
 
 namespace FamilyBudgetManager
 {
     public partial class BudgetManagerForm : Form
     {
-        
-
-        public BudgetManagerForm()
+        private readonly ITransactionRepository _repository;
+        public BudgetManagerForm(ITransactionRepository repository)
         {
+            _repository = repository;
             InitializeComponent();
             CreateDataBaseIfNotExists();
             LoadTransactions();
@@ -16,17 +17,7 @@ namespace FamilyBudgetManager
 
         private void CreateDataBaseIfNotExists()
         {
-            using var connection = new SQLiteConnection(dbPath);
-            connection.Open();
-            string query = @"CREATE TABLE IF NOT EXISTS Transactions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                category TEXT NOT NULL CHECK (category IN ('Income', 'Expense')),
-                description TEXT NOT NULL,
-                amount REAL NOT NULL,
-                date TEXT NOT NULL
-             );";
-            using var command = new SQLiteCommand(query, connection);
-            command.ExecuteNonQuery();
+            _repository.CreateNewIfNotExists();
         }
 
         private void InitializeComponent()
@@ -178,56 +169,70 @@ namespace FamilyBudgetManager
             string amount = AmountTextBox.Text.Trim();
             DateTime date = DatePicker.Value;
 
-            if (isValidInput(category!, description, amount))
+            if (IsValidInput(category, description, amount))
             {
                 MessageBox.Show("Please fill all fields.");
                 return;
             }
-            using var connection = new SQLiteConnection(dbPath);
-            connection.Open();
-            string query = "INSERT INTO Transactions (category, description, amount, date) VALUES (@category, @description, @amount, @date);";
-            using var command = new SQLiteCommand(query, connection);
-            command.Parameters.AddWithValue("@category", category);
-            command.Parameters.AddWithValue("@description", DescriptionTextBox.Text);
-            command.Parameters.AddWithValue("@amount", AmountTextBox.Text);
-            command.Parameters.AddWithValue("@date", DatePicker.Value.ToString("yyyy-MM-dd"));
-            command.ExecuteNonQuery();
+
+            _repository.Write(category, description, amount, date);
             LoadTransactions();
         }
 
-        private bool isValidInput(string category, string description, string amount)
+        private static bool IsValidInput(string category, string description, string amount)
         {
             if(string.IsNullOrEmpty(category) || 
-               string.IsNullOrEmpty(DescriptionTextBox.Text) || 
-               string.IsNullOrEmpty(AmountTextBox.Text))
+               string.IsNullOrEmpty(description) || 
+               string.IsNullOrEmpty(amount))
             {
-                return false;
+                return true;
             }
-            return true;
+            return false;
         }
 
         private void LoadTransactions()
         {
-            using var connection = new SQLiteConnection(dbPath);
-            connection.Open();
+            DataTable table = _repository.ReadAllTransactions();
+            BindDataTable(table);
+            SetupDataGridViewAppearance(dataGridView);
+        }
 
-            using var adapter = new SQLiteDataAdapter("SELECT * FROM Transactions", connection);
-            DataTable table = new DataTable();
-            adapter.Fill(table);
-
-            dataGridView.DataSource = table;
+        private void SetupDataGridViewAppearance(DataGridView dataGridView)
+        {
             dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridView.RowHeadersVisible = false;
             dataGridView.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridView.MultiSelect = false;
         }
 
+        private void BindDataTable(DataTable table)
+        {
+            dataGridView.DataSource = table;
+        }
+
         private void RemoveTransaction()
         {
-            if(dataGridView.SelectedRows.Count == 0)
+            if (!GetSelectedRowId(dataGridView, out int id))
+                return;
+
+            var confirm = MessageBox.Show(
+                "Are you sure you want to remove this transaction?",
+                "Remove Transaction",
+                MessageBoxButtons.YesNo);
+            if (confirm != DialogResult.Yes) return;
+
+            _repository.Delete(id);
+            LoadTransactions();
+        }
+
+        private static bool GetSelectedRowId(DataGridView dataGridView, out int id)
+        {
+            id = -1;
+
+            if (dataGridView.SelectedRows.Count == 0)
             {
                 MessageBox.Show("Please select a row to remove.");
-                return;
+                return false;
             }
 
             DataGridViewRow selectedRow = dataGridView.SelectedRows[0];
@@ -235,56 +240,17 @@ namespace FamilyBudgetManager
             if (!dataGridView.Columns.Contains("id"))
             {
                 MessageBox.Show("The table doesn't contain an 'id' column.");
-                return;
+                return false;
             }
 
             object? idValue = selectedRow.Cells["id"].Value;
-            if (idValue == null || !int.TryParse(idValue.ToString(), out int id))
+            if (idValue == null || !int.TryParse(idValue.ToString(), out id))
             {
                 MessageBox.Show("Invalid row selected.");
-                return;
+                return false;
             }
 
-            var confirm = MessageBox.Show(
-                "Are you sure you want to remove this transaction?", 
-                "Remove Transaction", 
-                MessageBoxButtons.YesNo);
-            if (confirm != DialogResult.Yes) return;         
-
-            LoadTransactions();
-        }
-    }
-
-    public interface IDataReader
-    {
-        void Read();
-        void Write();
-        void Delete(int id);
-    }
-
-    public class DatabaseReader : IDataReader
-    {
-        private string dbPath = "Data Source=budget.db;";
-
-        public void Read()
-        {
-            // Read data from the database
-        }
-
-        public void Write()
-        {
-            // Write data to the database
-        }
-
-        public void Delete(int id)
-        {
-            using var connection = new SQLiteConnection(dbPath);
-            connection.Open();
-
-            string query = "DELETE FROM Transactions WHERE id = @id;";
-            using var command = new SQLiteCommand(query, connection);
-            command.Parameters.AddWithValue("@id", id);
-            command.ExecuteNonQuery();
+            return true;
         }
     }
 }
