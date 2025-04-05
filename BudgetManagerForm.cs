@@ -13,6 +13,31 @@ namespace FamilyBudgetManager
             InitializeComponent();
             CreateDataBaseIfNotExists();
             LoadTransactions();
+            dataGridView.SelectionChanged += DataGridView_SelectionChanged;
+            AmountTextBox.KeyPress += AmountTextBox_OnlyPositiveInteger_KeyPress;
+        }
+
+        private void AmountTextBox_OnlyPositiveInteger_KeyPress(object? sender, KeyPressEventArgs e)
+        {
+            if (!char.IsControl(e.KeyChar) &&
+                !char.IsDigit(e.KeyChar))
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void DataGridView_SelectionChanged(object? sender, EventArgs e)
+        {
+            if(!IsRowSelected(dataGridView)) return;
+
+            var row = dataGridView.SelectedRows[0];
+
+            CategoryComboBox.SelectedItem = row.Cells["category"].Value.ToString();
+            DescriptionTextBox.Text = row.Cells["description"].Value.ToString();
+            AmountTextBox.Text = row.Cells["amount"].Value.ToString();
+            DatePicker.Value = DateTime.TryParse(row.Cells["date"].Value.ToString(), out DateTime date) 
+                ? date 
+                : DateTime.Today;
         }
 
         private void CreateDataBaseIfNotExists()
@@ -53,6 +78,7 @@ namespace FamilyBudgetManager
             CategoryComboBox.Name = "CategoryComboBox";
             CategoryComboBox.Size = new Size(151, 23);
             CategoryComboBox.TabIndex = 1;
+            CategoryComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             // 
             // DescriptionLabel
             // 
@@ -169,7 +195,7 @@ namespace FamilyBudgetManager
             string amount = AmountTextBox.Text.Trim();
             DateTime date = DatePicker.Value;
 
-            if (IsValidInput(category, description, amount))
+            if (IsInputInvalid(category, description, amount))
             {
                 MessageBox.Show("Please fill all fields.");
                 return;
@@ -179,7 +205,7 @@ namespace FamilyBudgetManager
             LoadTransactions();
         }
 
-        private static bool IsValidInput(string category, string description, string amount)
+        private static bool IsInputInvalid(string category, string description, string amount)
         {
             if(string.IsNullOrEmpty(category) || 
                string.IsNullOrEmpty(description) || 
@@ -203,6 +229,7 @@ namespace FamilyBudgetManager
             dataGridView.RowHeadersVisible = false;
             dataGridView.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridView.MultiSelect = false;
+            dataGridView.ReadOnly = true;
         }
 
         private void BindDataTable(DataTable table)
@@ -229,7 +256,7 @@ namespace FamilyBudgetManager
         {
             id = -1;
 
-            if (dataGridView.SelectedRows.Count == 0)
+            if (!IsRowSelected(dataGridView))
             {
                 MessageBox.Show("Please select a row to remove.");
                 return false;
@@ -251,6 +278,11 @@ namespace FamilyBudgetManager
             }
 
             return true;
+        }
+
+        private static bool IsRowSelected(DataGridView dataGridView)
+        {
+            return dataGridView.SelectedRows.Count != 0;
         }
     }
 }
