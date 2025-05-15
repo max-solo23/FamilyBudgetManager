@@ -13,6 +13,7 @@ namespace FamilyBudgetManager
             InitializeComponent();
             CreateDataBaseIfNotExists();
             LoadTransactions();
+            UpdateViewLabels();
             dataGridView.SelectionChanged += DataGridView_SelectionChanged;
             AmountTextBox.KeyPress += AmountTextBox_OnlyPositiveInteger_KeyPress;
         }
@@ -28,15 +29,15 @@ namespace FamilyBudgetManager
 
         private void DataGridView_SelectionChanged(object? sender, EventArgs e)
         {
-            if(!IsRowSelected(dataGridView)) return;
+            if (!IsRowSelected(dataGridView)) return;
 
             var row = dataGridView.SelectedRows[0];
 
             CategoryComboBox.SelectedItem = row.Cells["category"].Value.ToString();
             DescriptionTextBox.Text = row.Cells["description"].Value.ToString();
             AmountTextBox.Text = row.Cells["amount"].Value.ToString();
-            DatePicker.Value = DateTime.TryParse(row.Cells["date"].Value.ToString(), out DateTime date) 
-                ? date 
+            DatePicker.Value = DateTime.TryParse(row.Cells["date"].Value.ToString(), out DateTime date)
+                ? date
                 : DateTime.Today;
         }
 
@@ -58,6 +59,12 @@ namespace FamilyBudgetManager
             dataGridView = new DataGridView();
             AddTransactionButton = new Button();
             RemoveTransactionButton = new Button();
+            ExpensesSumTextLabel = new Label();
+            ExpensesSumViewLabel = new Label();
+            IncomesSumViewLabel = new Label();
+            IncomesSumTextLabel = new Label();
+            EstimatedAvailabilityViewLabel = new Label();
+            EstimatedAvailabilityTextLabel = new Label();
             ((System.ComponentModel.ISupportInitialize)dataGridView).BeginInit();
             SuspendLayout();
             // 
@@ -72,13 +79,13 @@ namespace FamilyBudgetManager
             // 
             // CategoryComboBox
             // 
+            CategoryComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             CategoryComboBox.FormattingEnabled = true;
             CategoryComboBox.Items.AddRange(new object[] { "", "Income", "Expense" });
             CategoryComboBox.Location = new Point(97, 377);
             CategoryComboBox.Name = "CategoryComboBox";
             CategoryComboBox.Size = new Size(151, 23);
             CategoryComboBox.TabIndex = 1;
-            CategoryComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             // 
             // DescriptionLabel
             // 
@@ -157,9 +164,69 @@ namespace FamilyBudgetManager
             RemoveTransactionButton.UseVisualStyleBackColor = true;
             RemoveTransactionButton.Click += RemoveTransactionButton_Click;
             // 
+            // ExpensesSumTextLabel
+            // 
+            ExpensesSumTextLabel.AutoSize = true;
+            ExpensesSumTextLabel.Location = new Point(670, 12);
+            ExpensesSumTextLabel.Name = "ExpensesSumTextLabel";
+            ExpensesSumTextLabel.Size = new Size(58, 15);
+            ExpensesSumTextLabel.TabIndex = 11;
+            ExpensesSumTextLabel.Text = "Expenses:";
+            // 
+            // ExpensesSumViewLabel
+            // 
+            ExpensesSumViewLabel.AutoSize = true;
+            ExpensesSumViewLabel.Location = new Point(805, 12);
+            ExpensesSumViewLabel.Name = "ExpensesSumViewLabel";
+            ExpensesSumViewLabel.Size = new Size(31, 15);
+            ExpensesSumViewLabel.TabIndex = 12;
+            ExpensesSumViewLabel.Text = "0000";
+            // 
+            // IncomesSumViewLabel
+            // 
+            IncomesSumViewLabel.AutoSize = true;
+            IncomesSumViewLabel.Location = new Point(805, 27);
+            IncomesSumViewLabel.Name = "IncomesSumViewLabel";
+            IncomesSumViewLabel.Size = new Size(31, 15);
+            IncomesSumViewLabel.TabIndex = 14;
+            IncomesSumViewLabel.Text = "0000";
+            // 
+            // IncomesSumTextLabel
+            // 
+            IncomesSumTextLabel.AutoSize = true;
+            IncomesSumTextLabel.Location = new Point(670, 27);
+            IncomesSumTextLabel.Name = "IncomesSumTextLabel";
+            IncomesSumTextLabel.Size = new Size(55, 15);
+            IncomesSumTextLabel.TabIndex = 13;
+            IncomesSumTextLabel.Text = "Incomes:";
+            // 
+            // EstimatedAvailabilityViewLabel
+            // 
+            EstimatedAvailabilityViewLabel.AutoSize = true;
+            EstimatedAvailabilityViewLabel.Location = new Point(805, 65);
+            EstimatedAvailabilityViewLabel.Name = "EstimatedAvailabilityViewLabel";
+            EstimatedAvailabilityViewLabel.Size = new Size(31, 15);
+            EstimatedAvailabilityViewLabel.TabIndex = 16;
+            EstimatedAvailabilityViewLabel.Text = "0000";
+            // 
+            // EstimatedAvailabilityTextLabel
+            // 
+            EstimatedAvailabilityTextLabel.AutoSize = true;
+            EstimatedAvailabilityTextLabel.Location = new Point(670, 65);
+            EstimatedAvailabilityTextLabel.Name = "EstimatedAvailabilityTextLabel";
+            EstimatedAvailabilityTextLabel.Size = new Size(121, 15);
+            EstimatedAvailabilityTextLabel.TabIndex = 15;
+            EstimatedAvailabilityTextLabel.Text = "Estimated availability:";
+            // 
             // BudgetManagerForm
             // 
-            ClientSize = new Size(688, 543);
+            ClientSize = new Size(875, 543);
+            Controls.Add(EstimatedAvailabilityViewLabel);
+            Controls.Add(EstimatedAvailabilityTextLabel);
+            Controls.Add(IncomesSumViewLabel);
+            Controls.Add(IncomesSumTextLabel);
+            Controls.Add(ExpensesSumViewLabel);
+            Controls.Add(ExpensesSumTextLabel);
             Controls.Add(RemoveTransactionButton);
             Controls.Add(AddTransactionButton);
             Controls.Add(dataGridView);
@@ -181,11 +248,13 @@ namespace FamilyBudgetManager
         private void AddTransactionButton_Click(object sender, EventArgs e)
         {
             AddTransaction();
+            UpdateViewLabels();
         }
 
         private void RemoveTransactionButton_Click(object sender, EventArgs e)
         {
             RemoveTransaction();
+            UpdateViewLabels();
         }
 
         private void AddTransaction()
@@ -207,8 +276,8 @@ namespace FamilyBudgetManager
 
         private static bool IsInputInvalid(string category, string description, string amount)
         {
-            if(string.IsNullOrEmpty(category) || 
-               string.IsNullOrEmpty(description) || 
+            if (string.IsNullOrEmpty(category) ||
+               string.IsNullOrEmpty(description) ||
                string.IsNullOrEmpty(amount))
             {
                 return true;
@@ -278,6 +347,29 @@ namespace FamilyBudgetManager
             }
 
             return true;
+        }
+
+        private string GetExpenses()
+        {
+            var expensesSum = _repository.GetSumFromCategory("Expense");
+            return expensesSum.ToString();
+        }
+
+        private string GetIncomes()
+        {
+            var incomesSum = _repository.GetSumFromCategory("Income");
+            return incomesSum.ToString();
+        }
+
+        private void UpdateViewLabels()
+        {
+            var incomes = GetIncomes();
+            var expenses = GetExpenses();
+
+            var estimatedAvailability = int.Parse(incomes) - int.Parse(expenses);
+            IncomesSumViewLabel.Text = incomes;
+            ExpensesSumViewLabel.Text = expenses;
+            EstimatedAvailabilityViewLabel.Text = estimatedAvailability.ToString();
         }
 
         private static bool IsRowSelected(DataGridView dataGridView)

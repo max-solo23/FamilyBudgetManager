@@ -25,5 +25,11 @@
         private Button AddTransactionButton;
         private ComboBox CategoryComboBox;
         private Button RemoveTransactionButton;
+        private Label ExpensesSumTextLabel;
+        private Label ExpensesSumViewLabel;
+        private Label IncomesSumViewLabel;
+        private Label IncomesSumTextLabel;
+        private Label EstimatedAvailabilityViewLabel;
+        private Label EstimatedAvailabilityTextLabel;
     }
 }

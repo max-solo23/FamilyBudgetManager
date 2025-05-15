@@ -56,5 +56,17 @@ namespace FamilyBudgetManager.TransactionsRepository
             using var command = new SQLiteCommand(query, connection);
             command.ExecuteNonQuery();
         }
+
+        public double GetSumFromCategory(string typeOfTransaction)
+        {
+            using var connection = new SQLiteConnection(dbPath);
+            connection.Open();
+            string query = @"SELECT SUM(amount) FROM Transactions WHERE category = @typeOfTransaction;";
+            using var command = new SQLiteCommand(query, connection);
+            command.Parameters.AddWithValue("@typeOfTransaction", typeOfTransaction);
+
+            object result = command.ExecuteScalar();
+            return result != DBNull.Value ? Convert.ToDouble(result) : 0.0;
+        }
     }
 }
