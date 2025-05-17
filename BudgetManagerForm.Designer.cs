@@ -31,5 +31,6 @@
         private Label IncomesSumTextLabel;
         private Label EstimatedAvailabilityViewLabel;
         private Label EstimatedAvailabilityTextLabel;
+        private Button PrintButton;
     }
 }

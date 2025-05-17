@@ -1,4 +1,5 @@
 using System.Data;
+using System.Drawing.Printing;
 using System.Windows.Forms;
 using FamilyBudgetManager.Helpers;
 using FamilyBudgetManager.TransactionsRepository;
@@ -8,6 +9,8 @@ namespace FamilyBudgetManager
     public partial class BudgetManagerForm : Form
     {
         private readonly ITransactionRepository _repository;
+        private PrintDocument printDocument = new PrintDocument();
+        private DataTable printTable;
         public BudgetManagerForm(ITransactionRepository repository)
         {
             _repository = repository;
@@ -17,6 +20,8 @@ namespace FamilyBudgetManager
             UpdateViewLabels();
             dataGridView.SelectionChanged += DataGridView_SelectionChanged;
             AmountTextBox.KeyPress += AmountTextBox_OnlyPositiveInteger_KeyPress;
+            printDocument.PrintPage += PrintDocument_PrintPage;
+
         }
 
         private void AmountTextBox_OnlyPositiveInteger_KeyPress(object? sender, KeyPressEventArgs e)
@@ -42,6 +47,8 @@ namespace FamilyBudgetManager
                 : DateTime.Today;
         }
 
+
+
         private void CreateDataBaseIfNotExists()
         {
             _repository.CreateNewIfNotExists();
@@ -66,6 +73,7 @@ namespace FamilyBudgetManager
             IncomesSumTextLabel = new Label();
             EstimatedAvailabilityViewLabel = new Label();
             EstimatedAvailabilityTextLabel = new Label();
+            PrintButton = new Button();
             ((System.ComponentModel.ISupportInitialize)dataGridView).BeginInit();
             SuspendLayout();
             // 
@@ -219,9 +227,20 @@ namespace FamilyBudgetManager
             EstimatedAvailabilityTextLabel.TabIndex = 15;
             EstimatedAvailabilityTextLabel.Text = "Estimated availability:";
             // 
+            // PrintButton
+            // 
+            PrintButton.Location = new Point(538, 502);
+            PrintButton.Name = "PrintButton";
+            PrintButton.Size = new Size(126, 29);
+            PrintButton.TabIndex = 17;
+            PrintButton.Text = "Print Table";
+            PrintButton.UseVisualStyleBackColor = true;
+            PrintButton.Click += PrintButton_Click;
+            // 
             // BudgetManagerForm
             // 
             ClientSize = new Size(875, 543);
+            Controls.Add(PrintButton);
             Controls.Add(EstimatedAvailabilityViewLabel);
             Controls.Add(EstimatedAvailabilityTextLabel);
             Controls.Add(IncomesSumViewLabel);
@@ -244,6 +263,47 @@ namespace FamilyBudgetManager
             ((System.ComponentModel.ISupportInitialize)dataGridView).EndInit();
             ResumeLayout(false);
             PerformLayout();
+        }
+
+        private void PrintButton_Click(object sender, EventArgs e)
+        {
+            printTable = _repository.ReadAllTransactions();
+
+            PrintDialog dialog = new PrintDialog
+            {
+                Document = printDocument
+            };
+
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                printDocument.Print();
+            }
+        }
+
+        private void PrintDocument_PrintPage(object sender, PrintPageEventArgs e)
+        {
+            float y = 20;
+            int columnSpacing = 200;
+            Font font = new Font("Consolas", 10);
+            Brush brush = Brushes.Black;
+
+            // Print column headers
+            for (int i = 1; i < printTable.Columns.Count - 1; i++)
+            {
+                e.Graphics.DrawString(printTable.Columns[i].ColumnName, font, brush, i * columnSpacing, y);
+            }
+
+            y += 30;
+
+            // Print rows
+            foreach (DataRow row in printTable.Rows)
+            {
+                for (int i = 1; i < printTable.Columns.Count - 1; i++)
+                {
+                    e.Graphics.DrawString(row[i]?.ToString(), font, brush, i * columnSpacing, y);
+                }
+                y += 20;
+            }
         }
 
         private void AddTransactionButton_Click(object sender, EventArgs e)
@@ -333,5 +393,6 @@ namespace FamilyBudgetManager
             EstimatedAvailabilityViewLabel.Text = estimatedAvailability.ToString();
         }
 
+        
     }
 }
