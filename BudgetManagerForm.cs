@@ -1,5 +1,6 @@
 using System.Data;
 using System.Windows.Forms;
+using FamilyBudgetManager.Helpers;
 using FamilyBudgetManager.TransactionsRepository;
 
 namespace FamilyBudgetManager
@@ -12,7 +13,7 @@ namespace FamilyBudgetManager
             _repository = repository;
             InitializeComponent();
             CreateDataBaseIfNotExists();
-            LoadTransactions();
+            DisplayTransactionsInDataTable();
             UpdateViewLabels();
             dataGridView.SelectionChanged += DataGridView_SelectionChanged;
             AmountTextBox.KeyPress += AmountTextBox_OnlyPositiveInteger_KeyPress;
@@ -29,7 +30,7 @@ namespace FamilyBudgetManager
 
         private void DataGridView_SelectionChanged(object? sender, EventArgs e)
         {
-            if (!IsRowSelected(dataGridView)) return;
+            if (!DataGridHelper.RowSelected(dataGridView)) return;
 
             var row = dataGridView.SelectedRows[0];
 
@@ -264,51 +265,36 @@ namespace FamilyBudgetManager
             string amount = AmountTextBox.Text.Trim();
             DateTime date = DatePicker.Value;
 
-            if (IsInputInvalid(category, description, amount))
+            if (!ValidInput(category, description, amount))
             {
                 MessageBox.Show("Please fill all fields.");
                 return;
             }
 
             _repository.Write(category, description, amount, date);
-            LoadTransactions();
+            DisplayTransactionsInDataTable();
         }
 
-        private static bool IsInputInvalid(string category, string description, string amount)
+        private static bool ValidInput(string category, string description, string amount)
         {
             if (string.IsNullOrEmpty(category) ||
                string.IsNullOrEmpty(description) ||
                string.IsNullOrEmpty(amount))
             {
-                return true;
+                return false;
             }
-            return false;
+            return true;
         }
 
-        private void LoadTransactions()
+        private void DisplayTransactionsInDataTable()
         {
             DataTable table = _repository.ReadAllTransactions();
-            BindDataTable(table);
-            SetupDataGridViewAppearance(dataGridView);
-        }
-
-        private void SetupDataGridViewAppearance(DataGridView dataGridView)
-        {
-            dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridView.RowHeadersVisible = false;
-            dataGridView.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dataGridView.MultiSelect = false;
-            dataGridView.ReadOnly = true;
-        }
-
-        private void BindDataTable(DataTable table)
-        {
-            dataGridView.DataSource = table;
+            DataGridHelper.SetupDataGridView(dataGridView, table);
         }
 
         private void RemoveTransaction()
         {
-            if (!GetSelectedRowId(dataGridView, out int id))
+            if (!DataGridHelper.GetSelectedRowId(dataGridView, out int id))
                 return;
 
             var confirm = MessageBox.Show(
@@ -318,36 +304,10 @@ namespace FamilyBudgetManager
             if (confirm != DialogResult.Yes) return;
 
             _repository.Delete(id);
-            LoadTransactions();
+            DisplayTransactionsInDataTable();
         }
 
-        private static bool GetSelectedRowId(DataGridView dataGridView, out int id)
-        {
-            id = -1;
 
-            if (!IsRowSelected(dataGridView))
-            {
-                MessageBox.Show("Please select a row to remove.");
-                return false;
-            }
-
-            DataGridViewRow selectedRow = dataGridView.SelectedRows[0];
-
-            if (!dataGridView.Columns.Contains("id"))
-            {
-                MessageBox.Show("The table doesn't contain an 'id' column.");
-                return false;
-            }
-
-            object? idValue = selectedRow.Cells["id"].Value;
-            if (idValue == null || !int.TryParse(idValue.ToString(), out id))
-            {
-                MessageBox.Show("Invalid row selected.");
-                return false;
-            }
-
-            return true;
-        }
 
         private string GetExpenses()
         {
@@ -367,14 +327,11 @@ namespace FamilyBudgetManager
             var expenses = GetExpenses();
 
             var estimatedAvailability = int.Parse(incomes) - int.Parse(expenses);
+
             IncomesSumViewLabel.Text = incomes;
             ExpensesSumViewLabel.Text = expenses;
             EstimatedAvailabilityViewLabel.Text = estimatedAvailability.ToString();
         }
 
-        private static bool IsRowSelected(DataGridView dataGridView)
-        {
-            return dataGridView.SelectedRows.Count != 0;
-        }
     }
 }
