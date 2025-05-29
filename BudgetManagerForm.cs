@@ -74,6 +74,7 @@ namespace FamilyBudgetManager
             EstimatedAvailabilityViewLabel = new Label();
             EstimatedAvailabilityTextLabel = new Label();
             PrintButton = new Button();
+            UpdateTransactionButton = new Button();
             ((System.ComponentModel.ISupportInitialize)dataGridView).BeginInit();
             SuspendLayout();
             // 
@@ -237,9 +238,20 @@ namespace FamilyBudgetManager
             PrintButton.UseVisualStyleBackColor = true;
             PrintButton.Click += PrintButton_Click;
             // 
+            // UpdateTransactionButton
+            // 
+            UpdateTransactionButton.Location = new Point(278, 502);
+            UpdateTransactionButton.Name = "UpdateTransactionButton";
+            UpdateTransactionButton.Size = new Size(126, 29);
+            UpdateTransactionButton.TabIndex = 18;
+            UpdateTransactionButton.Text = "Update";
+            UpdateTransactionButton.UseVisualStyleBackColor = true;
+            UpdateTransactionButton.Click += UpdateTransactionButton_Click;
+            // 
             // BudgetManagerForm
             // 
             ClientSize = new Size(875, 543);
+            Controls.Add(UpdateTransactionButton);
             Controls.Add(PrintButton);
             Controls.Add(EstimatedAvailabilityViewLabel);
             Controls.Add(EstimatedAvailabilityTextLabel);
@@ -325,7 +337,7 @@ namespace FamilyBudgetManager
             string amount = AmountTextBox.Text.Trim();
             DateTime date = DatePicker.Value;
 
-            if (!ValidInput(category, description, amount))
+            if (!Validator.IsValidInput(category, description, amount))
             {
                 MessageBox.Show("Please fill all fields.");
                 return;
@@ -335,15 +347,26 @@ namespace FamilyBudgetManager
             DisplayTransactionsInDataTable();
         }
 
-        private static bool ValidInput(string category, string description, string amount)
+        private void UpdateTransaction()
         {
-            if (string.IsNullOrEmpty(category) ||
-               string.IsNullOrEmpty(description) ||
-               string.IsNullOrEmpty(amount))
+            if (dataGridView.SelectedRows.Count == 0)
             {
-                return false;
+                MessageBox.Show("Please select a transaction.");
             }
-            return true;
+            string category = CategoryComboBox.SelectedItem?.ToString();
+            string description = DescriptionTextBox.Text.Trim();
+            string amount = AmountTextBox.Text.Trim();
+            DateTime date = DatePicker.Value;
+            int id = Convert.ToInt32(this.dataGridView.SelectedRows[0].Cells["id"].Value);
+
+            if (!Validator.IsValidInput(category, description, amount))
+            {
+                MessageBox.Show("Please fill all fields.");
+                return;
+            }
+
+            _repository.Update(id, category, description, amount, date);
+            DisplayTransactionsInDataTable();
         }
 
         private void DisplayTransactionsInDataTable()
@@ -393,6 +416,10 @@ namespace FamilyBudgetManager
             EstimatedAvailabilityViewLabel.Text = estimatedAvailability.ToString();
         }
 
-        
+        private void UpdateTransactionButton_Click(object sender, EventArgs e)
+        {
+            UpdateTransaction();
+            UpdateViewLabels();
+        }
     }
 }

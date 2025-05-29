@@ -32,5 +32,6 @@
         private Label EstimatedAvailabilityViewLabel;
         private Label EstimatedAvailabilityTextLabel;
         private Button PrintButton;
+        private Button UpdateTransactionButton;
     }
 }
