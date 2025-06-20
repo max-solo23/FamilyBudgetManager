@@ -18,7 +18,7 @@ namespace FamilyBudgetManager.Helpers
         {
             id = -1;
 
-            if (!RowSelected(grid))
+            if (!IsRowSelected(grid))
             {
                 MessageBox.Show("Please select a row.");
                 return false;
@@ -42,7 +42,7 @@ namespace FamilyBudgetManager.Helpers
             return true;
         }
 
-        public static bool RowSelected(DataGridView grid)
+        public static bool IsRowSelected(DataGridView grid)
         {
             return grid.SelectedRows.Count != 0;
         }

@@ -16,12 +16,12 @@ namespace FamilyBudgetManager
             _repository = repository;
             InitializeComponent();
             CreateDataBaseIfNotExists();
+            LoadTableNames();
             DisplayTransactionsInDataTable();
-            UpdateViewLabels();
+            UpdateViewLabels();            
             dataGridView.SelectionChanged += DataGridView_SelectionChanged;
             AmountTextBox.KeyPress += AmountTextBox_OnlyPositiveInteger_KeyPress;
             printDocument.PrintPage += PrintDocument_PrintPage;
-
         }
 
         private void AmountTextBox_OnlyPositiveInteger_KeyPress(object? sender, KeyPressEventArgs e)
@@ -35,7 +35,7 @@ namespace FamilyBudgetManager
 
         private void DataGridView_SelectionChanged(object? sender, EventArgs e)
         {
-            if (!DataGridHelper.RowSelected(dataGridView)) return;
+            if (!DataGridHelper.IsRowSelected(dataGridView)) return;
 
             var row = dataGridView.SelectedRows[0];
 
@@ -46,8 +46,6 @@ namespace FamilyBudgetManager
                 ? date
                 : DateTime.Today;
         }
-
-
 
         private void CreateDataBaseIfNotExists()
         {
@@ -75,13 +73,14 @@ namespace FamilyBudgetManager
             EstimatedAvailabilityTextLabel = new Label();
             PrintButton = new Button();
             UpdateTransactionButton = new Button();
+            TableSelectorComboBox = new ComboBox();
             ((System.ComponentModel.ISupportInitialize)dataGridView).BeginInit();
             SuspendLayout();
             // 
             // CategoryLabel
             // 
             CategoryLabel.AutoSize = true;
-            CategoryLabel.Location = new Point(25, 380);
+            CategoryLabel.Location = new Point(32, 438);
             CategoryLabel.Name = "CategoryLabel";
             CategoryLabel.Size = new Size(55, 15);
             CategoryLabel.TabIndex = 0;
@@ -92,7 +91,7 @@ namespace FamilyBudgetManager
             CategoryComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             CategoryComboBox.FormattingEnabled = true;
             CategoryComboBox.Items.AddRange(new object[] { "", "Income", "Expense" });
-            CategoryComboBox.Location = new Point(97, 377);
+            CategoryComboBox.Location = new Point(104, 435);
             CategoryComboBox.Name = "CategoryComboBox";
             CategoryComboBox.Size = new Size(151, 23);
             CategoryComboBox.TabIndex = 1;
@@ -100,7 +99,7 @@ namespace FamilyBudgetManager
             // DescriptionLabel
             // 
             DescriptionLabel.AutoSize = true;
-            DescriptionLabel.Location = new Point(25, 412);
+            DescriptionLabel.Location = new Point(32, 470);
             DescriptionLabel.Name = "DescriptionLabel";
             DescriptionLabel.Size = new Size(67, 15);
             DescriptionLabel.TabIndex = 2;
@@ -108,7 +107,7 @@ namespace FamilyBudgetManager
             // 
             // DescriptionTextBox
             // 
-            DescriptionTextBox.Location = new Point(97, 409);
+            DescriptionTextBox.Location = new Point(104, 467);
             DescriptionTextBox.Name = "DescriptionTextBox";
             DescriptionTextBox.Size = new Size(567, 23);
             DescriptionTextBox.TabIndex = 3;
@@ -116,7 +115,7 @@ namespace FamilyBudgetManager
             // AmountLabel
             // 
             AmountLabel.AutoSize = true;
-            AmountLabel.Location = new Point(25, 441);
+            AmountLabel.Location = new Point(32, 499);
             AmountLabel.Name = "AmountLabel";
             AmountLabel.Size = new Size(51, 15);
             AmountLabel.TabIndex = 4;
@@ -124,7 +123,7 @@ namespace FamilyBudgetManager
             // 
             // AmountTextBox
             // 
-            AmountTextBox.Location = new Point(97, 438);
+            AmountTextBox.Location = new Point(104, 496);
             AmountTextBox.Name = "AmountTextBox";
             AmountTextBox.Size = new Size(567, 23);
             AmountTextBox.TabIndex = 5;
@@ -132,7 +131,7 @@ namespace FamilyBudgetManager
             // DateLabel
             // 
             DateLabel.AutoSize = true;
-            DateLabel.Location = new Point(25, 473);
+            DateLabel.Location = new Point(32, 531);
             DateLabel.Name = "DateLabel";
             DateLabel.Size = new Size(31, 15);
             DateLabel.TabIndex = 6;
@@ -140,7 +139,7 @@ namespace FamilyBudgetManager
             // 
             // DatePicker
             // 
-            DatePicker.Location = new Point(97, 467);
+            DatePicker.Location = new Point(104, 525);
             DatePicker.Name = "DatePicker";
             DatePicker.Size = new Size(200, 23);
             DatePicker.TabIndex = 7;
@@ -148,7 +147,7 @@ namespace FamilyBudgetManager
             // dataGridView
             // 
             dataGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView.Location = new Point(25, 12);
+            dataGridView.Location = new Point(32, 70);
             dataGridView.Name = "dataGridView";
             dataGridView.RowTemplate.Height = 25;
             dataGridView.Size = new Size(639, 320);
@@ -156,7 +155,7 @@ namespace FamilyBudgetManager
             // 
             // AddTransactionButton
             // 
-            AddTransactionButton.Location = new Point(27, 502);
+            AddTransactionButton.Location = new Point(34, 560);
             AddTransactionButton.Name = "AddTransactionButton";
             AddTransactionButton.Size = new Size(113, 29);
             AddTransactionButton.TabIndex = 9;
@@ -166,7 +165,7 @@ namespace FamilyBudgetManager
             // 
             // RemoveTransactionButton
             // 
-            RemoveTransactionButton.Location = new Point(146, 502);
+            RemoveTransactionButton.Location = new Point(153, 560);
             RemoveTransactionButton.Name = "RemoveTransactionButton";
             RemoveTransactionButton.Size = new Size(126, 29);
             RemoveTransactionButton.TabIndex = 10;
@@ -177,7 +176,7 @@ namespace FamilyBudgetManager
             // ExpensesSumTextLabel
             // 
             ExpensesSumTextLabel.AutoSize = true;
-            ExpensesSumTextLabel.Location = new Point(670, 12);
+            ExpensesSumTextLabel.Location = new Point(677, 70);
             ExpensesSumTextLabel.Name = "ExpensesSumTextLabel";
             ExpensesSumTextLabel.Size = new Size(58, 15);
             ExpensesSumTextLabel.TabIndex = 11;
@@ -186,7 +185,7 @@ namespace FamilyBudgetManager
             // ExpensesSumViewLabel
             // 
             ExpensesSumViewLabel.AutoSize = true;
-            ExpensesSumViewLabel.Location = new Point(805, 12);
+            ExpensesSumViewLabel.Location = new Point(812, 70);
             ExpensesSumViewLabel.Name = "ExpensesSumViewLabel";
             ExpensesSumViewLabel.Size = new Size(31, 15);
             ExpensesSumViewLabel.TabIndex = 12;
@@ -195,7 +194,7 @@ namespace FamilyBudgetManager
             // IncomesSumViewLabel
             // 
             IncomesSumViewLabel.AutoSize = true;
-            IncomesSumViewLabel.Location = new Point(805, 27);
+            IncomesSumViewLabel.Location = new Point(812, 85);
             IncomesSumViewLabel.Name = "IncomesSumViewLabel";
             IncomesSumViewLabel.Size = new Size(31, 15);
             IncomesSumViewLabel.TabIndex = 14;
@@ -204,7 +203,7 @@ namespace FamilyBudgetManager
             // IncomesSumTextLabel
             // 
             IncomesSumTextLabel.AutoSize = true;
-            IncomesSumTextLabel.Location = new Point(670, 27);
+            IncomesSumTextLabel.Location = new Point(677, 85);
             IncomesSumTextLabel.Name = "IncomesSumTextLabel";
             IncomesSumTextLabel.Size = new Size(55, 15);
             IncomesSumTextLabel.TabIndex = 13;
@@ -213,7 +212,7 @@ namespace FamilyBudgetManager
             // EstimatedAvailabilityViewLabel
             // 
             EstimatedAvailabilityViewLabel.AutoSize = true;
-            EstimatedAvailabilityViewLabel.Location = new Point(805, 65);
+            EstimatedAvailabilityViewLabel.Location = new Point(812, 123);
             EstimatedAvailabilityViewLabel.Name = "EstimatedAvailabilityViewLabel";
             EstimatedAvailabilityViewLabel.Size = new Size(31, 15);
             EstimatedAvailabilityViewLabel.TabIndex = 16;
@@ -222,7 +221,7 @@ namespace FamilyBudgetManager
             // EstimatedAvailabilityTextLabel
             // 
             EstimatedAvailabilityTextLabel.AutoSize = true;
-            EstimatedAvailabilityTextLabel.Location = new Point(670, 65);
+            EstimatedAvailabilityTextLabel.Location = new Point(677, 123);
             EstimatedAvailabilityTextLabel.Name = "EstimatedAvailabilityTextLabel";
             EstimatedAvailabilityTextLabel.Size = new Size(121, 15);
             EstimatedAvailabilityTextLabel.TabIndex = 15;
@@ -230,7 +229,7 @@ namespace FamilyBudgetManager
             // 
             // PrintButton
             // 
-            PrintButton.Location = new Point(538, 502);
+            PrintButton.Location = new Point(545, 560);
             PrintButton.Name = "PrintButton";
             PrintButton.Size = new Size(126, 29);
             PrintButton.TabIndex = 17;
@@ -240,7 +239,7 @@ namespace FamilyBudgetManager
             // 
             // UpdateTransactionButton
             // 
-            UpdateTransactionButton.Location = new Point(278, 502);
+            UpdateTransactionButton.Location = new Point(285, 560);
             UpdateTransactionButton.Name = "UpdateTransactionButton";
             UpdateTransactionButton.Size = new Size(126, 29);
             UpdateTransactionButton.TabIndex = 18;
@@ -248,9 +247,19 @@ namespace FamilyBudgetManager
             UpdateTransactionButton.UseVisualStyleBackColor = true;
             UpdateTransactionButton.Click += UpdateTransactionButton_Click;
             // 
+            // TableSelectorComboBox
+            // 
+            TableSelectorComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            TableSelectorComboBox.FormattingEnabled = true;
+            TableSelectorComboBox.Location = new Point(34, 12);
+            TableSelectorComboBox.Name = "TableSelectorComboBox";
+            TableSelectorComboBox.Size = new Size(121, 23);
+            TableSelectorComboBox.TabIndex = 19;
+            // 
             // BudgetManagerForm
             // 
-            ClientSize = new Size(875, 543);
+            ClientSize = new Size(875, 611);
+            Controls.Add(TableSelectorComboBox);
             Controls.Add(UpdateTransactionButton);
             Controls.Add(PrintButton);
             Controls.Add(EstimatedAvailabilityViewLabel);
@@ -279,7 +288,8 @@ namespace FamilyBudgetManager
 
         private void PrintButton_Click(object sender, EventArgs e)
         {
-            printTable = _repository.ReadAllTransactions();
+            string tableName = TableSelectorComboBox.SelectedItem?.ToString() ?? "";
+            printTable = _repository.ReadAllTransactions(tableName);
 
             PrintDialog dialog = new PrintDialog
             {
@@ -299,7 +309,6 @@ namespace FamilyBudgetManager
             Font font = new Font("Consolas", 10);
             Brush brush = Brushes.Black;
 
-            // Print column headers
             for (int i = 1; i < printTable.Columns.Count - 1; i++)
             {
                 e.Graphics.DrawString(printTable.Columns[i].ColumnName, font, brush, i * columnSpacing, y);
@@ -307,7 +316,6 @@ namespace FamilyBudgetManager
 
             y += 30;
 
-            // Print rows
             foreach (DataRow row in printTable.Rows)
             {
                 for (int i = 1; i < printTable.Columns.Count - 1; i++)
@@ -371,8 +379,13 @@ namespace FamilyBudgetManager
 
         private void DisplayTransactionsInDataTable()
         {
-            DataTable table = _repository.ReadAllTransactions();
-            DataGridHelper.SetupDataGridView(dataGridView, table);
+            string tableName = TableSelectorComboBox.SelectedItem?.ToString() ?? "";
+
+            if(tableName != "")
+            {
+                DataTable table = _repository.ReadAllTransactions(tableName);
+                DataGridHelper.SetupDataGridView(dataGridView, table);
+            }            
         }
 
         private void RemoveTransaction()
@@ -384,13 +397,12 @@ namespace FamilyBudgetManager
                 "Are you sure you want to remove this transaction?",
                 "Remove Transaction",
                 MessageBoxButtons.YesNo);
+
             if (confirm != DialogResult.Yes) return;
 
             _repository.Delete(id);
             DisplayTransactionsInDataTable();
         }
-
-
 
         private string GetExpenses()
         {
@@ -420,6 +432,18 @@ namespace FamilyBudgetManager
         {
             UpdateTransaction();
             UpdateViewLabels();
+        }
+
+        private void LoadTableNames()
+        {
+            var tables = _repository.GetAllTableNames();
+            TableSelectorComboBox.Items.Clear();
+            TableSelectorComboBox.Items.AddRange(tables.ToArray());
+
+            if(tables.Any())
+            {
+                TableSelectorComboBox.SelectedItem = tables[0];
+            }
         }
     }
 }

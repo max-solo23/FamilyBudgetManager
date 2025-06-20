@@ -33,5 +33,6 @@
         private Label EstimatedAvailabilityTextLabel;
         private Button PrintButton;
         private Button UpdateTransactionButton;
+        private ComboBox TableSelectorComboBox;
     }
 }
