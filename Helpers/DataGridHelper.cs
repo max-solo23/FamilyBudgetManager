@@ -12,6 +12,12 @@ namespace FamilyBudgetManager.Helpers
             grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             grid.MultiSelect = false;
             grid.ReadOnly = true;
+            grid.AlternatingRowsDefaultCellStyle.BackColor = Color.LightGray;
+
+            if (grid.Columns["id"] != null)
+            {
+                grid.Sort(grid.Columns["id"], System.ComponentModel.ListSortDirection.Descending);
+            }
         }
 
         public static bool GetSelectedRowId(DataGridView grid, out int id)

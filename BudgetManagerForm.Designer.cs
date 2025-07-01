@@ -34,5 +34,10 @@
         private Button PrintButton;
         private Button UpdateTransactionButton;
         private ComboBox TableSelectorComboBox;
+        private Button CreateNewTableButton;
+        private TextBox NewTableNameInput;
+        private ComboBox TargetTableSelectorComboBox;
+        private Button TransferRecordButton;
+        private Label TransferArrowLabel;
     }
 }

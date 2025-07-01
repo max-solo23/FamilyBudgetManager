@@ -11,17 +11,30 @@ namespace FamilyBudgetManager
         private readonly ITransactionRepository _repository;
         private PrintDocument printDocument = new PrintDocument();
         private DataTable printTable;
+        private string currentTableName;
         public BudgetManagerForm(ITransactionRepository repository)
         {
             _repository = repository;
+            _repository.CreateNewIfNotExists();
             InitializeComponent();
-            CreateDataBaseIfNotExists();
             LoadTableNames();
+            UpdateTargetTableSelectorComboBox();
             DisplayTransactionsInDataTable();
-            UpdateViewLabels();            
+            UpdateViewLabels();
             dataGridView.SelectionChanged += DataGridView_SelectionChanged;
             AmountTextBox.KeyPress += AmountTextBox_OnlyPositiveInteger_KeyPress;
             printDocument.PrintPage += PrintDocument_PrintPage;
+            TableSelectorComboBox.SelectedIndexChanged += TableSelectorComboBox_SelectedIndexChanged;
+        }
+
+        private void TableSelectorComboBox_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            currentTableName = TableSelectorComboBox.SelectedItem?.ToString() ?? "";
+
+            DisplayTransactionsInDataTable();
+            UpdateViewLabels();
+
+            UpdateTargetTableSelectorComboBox();
         }
 
         private void AmountTextBox_OnlyPositiveInteger_KeyPress(object? sender, KeyPressEventArgs e)
@@ -47,11 +60,6 @@ namespace FamilyBudgetManager
                 : DateTime.Today;
         }
 
-        private void CreateDataBaseIfNotExists()
-        {
-            _repository.CreateNewIfNotExists();
-        }
-
         private void InitializeComponent()
         {
             CategoryLabel = new Label();
@@ -74,6 +82,11 @@ namespace FamilyBudgetManager
             PrintButton = new Button();
             UpdateTransactionButton = new Button();
             TableSelectorComboBox = new ComboBox();
+            CreateNewTableButton = new Button();
+            NewTableNameInput = new TextBox();
+            TargetTableSelectorComboBox = new ComboBox();
+            TransferRecordButton = new Button();
+            TransferArrowLabel = new Label();
             ((System.ComponentModel.ISupportInitialize)dataGridView).BeginInit();
             SuspendLayout();
             // 
@@ -111,6 +124,7 @@ namespace FamilyBudgetManager
             DescriptionTextBox.Name = "DescriptionTextBox";
             DescriptionTextBox.Size = new Size(567, 23);
             DescriptionTextBox.TabIndex = 3;
+            DescriptionTextBox.TextChanged += DescriptionTextBox_TextChanged;
             // 
             // AmountLabel
             // 
@@ -256,9 +270,60 @@ namespace FamilyBudgetManager
             TableSelectorComboBox.Size = new Size(121, 23);
             TableSelectorComboBox.TabIndex = 19;
             // 
+            // CreateNewTableButton
+            // 
+            CreateNewTableButton.Location = new Point(558, 8);
+            CreateNewTableButton.Name = "CreateNewTableButton";
+            CreateNewTableButton.Size = new Size(113, 29);
+            CreateNewTableButton.TabIndex = 20;
+            CreateNewTableButton.Text = "Create New Table";
+            CreateNewTableButton.UseVisualStyleBackColor = true;
+            CreateNewTableButton.Click += CreateNewTableButton_Click;
+            // 
+            // NewTableNameInput
+            // 
+            NewTableNameInput.Location = new Point(161, 12);
+            NewTableNameInput.Name = "NewTableNameInput";
+            NewTableNameInput.PlaceholderText = "New Table Name";
+            NewTableNameInput.Size = new Size(391, 23);
+            NewTableNameInput.TabIndex = 21;
+            // 
+            // TargetTableSelectorComboBox
+            // 
+            TargetTableSelectorComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            TargetTableSelectorComboBox.FormattingEnabled = true;
+            TargetTableSelectorComboBox.Location = new Point(550, 434);
+            TargetTableSelectorComboBox.Name = "TargetTableSelectorComboBox";
+            TargetTableSelectorComboBox.Size = new Size(121, 23);
+            TargetTableSelectorComboBox.TabIndex = 22;
+            // 
+            // TransferRecordButton
+            // 
+            TransferRecordButton.Location = new Point(405, 431);
+            TransferRecordButton.Name = "TransferRecordButton";
+            TransferRecordButton.Size = new Size(113, 29);
+            TransferRecordButton.TabIndex = 23;
+            TransferRecordButton.Text = "Transfer Record";
+            TransferRecordButton.UseVisualStyleBackColor = true;
+            TransferRecordButton.Click += TransferRecordButton_Click;
+            // 
+            // TransferArrowLabel
+            // 
+            TransferArrowLabel.AutoSize = true;
+            TransferArrowLabel.Location = new Point(524, 437);
+            TransferArrowLabel.Name = "TransferArrowLabel";
+            TransferArrowLabel.Size = new Size(20, 15);
+            TransferArrowLabel.TabIndex = 24;
+            TransferArrowLabel.Text = "->";
+            // 
             // BudgetManagerForm
             // 
             ClientSize = new Size(875, 611);
+            Controls.Add(TransferArrowLabel);
+            Controls.Add(TransferRecordButton);
+            Controls.Add(TargetTableSelectorComboBox);
+            Controls.Add(NewTableNameInput);
+            Controls.Add(CreateNewTableButton);
             Controls.Add(TableSelectorComboBox);
             Controls.Add(UpdateTransactionButton);
             Controls.Add(PrintButton);
@@ -281,6 +346,7 @@ namespace FamilyBudgetManager
             Controls.Add(CategoryLabel);
             Name = "BudgetManagerForm";
             Text = "Family Budget Manager";
+            Load += BudgetManagerForm_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridView).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -289,7 +355,7 @@ namespace FamilyBudgetManager
         private void PrintButton_Click(object sender, EventArgs e)
         {
             string tableName = TableSelectorComboBox.SelectedItem?.ToString() ?? "";
-            printTable = _repository.ReadAllTransactions(tableName);
+            printTable = _repository.ReadAllTransactions(currentTableName);
 
             PrintDialog dialog = new PrintDialog
             {
@@ -351,7 +417,7 @@ namespace FamilyBudgetManager
                 return;
             }
 
-            _repository.Write(category, description, amount, date);
+            _repository.Write(category, description, amount, date, currentTableName);
             DisplayTransactionsInDataTable();
         }
 
@@ -373,19 +439,17 @@ namespace FamilyBudgetManager
                 return;
             }
 
-            _repository.Update(id, category, description, amount, date);
+            _repository.Update(id, category, description, amount, date, currentTableName);
             DisplayTransactionsInDataTable();
         }
 
         private void DisplayTransactionsInDataTable()
         {
-            string tableName = TableSelectorComboBox.SelectedItem?.ToString() ?? "";
-
-            if(tableName != "")
+            if (!string.IsNullOrEmpty(currentTableName))
             {
-                DataTable table = _repository.ReadAllTransactions(tableName);
+                DataTable table = _repository.ReadAllTransactions(currentTableName);
                 DataGridHelper.SetupDataGridView(dataGridView, table);
-            }            
+            }
         }
 
         private void RemoveTransaction()
@@ -400,19 +464,19 @@ namespace FamilyBudgetManager
 
             if (confirm != DialogResult.Yes) return;
 
-            _repository.Delete(id);
+            _repository.Delete(id, currentTableName);
             DisplayTransactionsInDataTable();
         }
 
         private string GetExpenses()
         {
-            var expensesSum = _repository.GetSumFromCategory("Expense");
+            var expensesSum = _repository.GetSumFromCategory("Expense", currentTableName);
             return expensesSum.ToString();
         }
 
         private string GetIncomes()
         {
-            var incomesSum = _repository.GetSumFromCategory("Income");
+            var incomesSum = _repository.GetSumFromCategory("Income", currentTableName);
             return incomesSum.ToString();
         }
 
@@ -440,10 +504,86 @@ namespace FamilyBudgetManager
             TableSelectorComboBox.Items.Clear();
             TableSelectorComboBox.Items.AddRange(tables.ToArray());
 
-            if(tables.Any())
+            if (tables.Any())
             {
                 TableSelectorComboBox.SelectedItem = tables[0];
+                currentTableName = tables[0];
             }
+        }
+
+        private void UpdateTargetTableSelectorComboBox()
+        {
+            var tables = _repository.GetAllTableNames();
+            TargetTableSelectorComboBox.Items.Clear();
+            var transferTables = tables.Where(t => t != currentTableName).ToArray();
+            TargetTableSelectorComboBox.Items.AddRange(transferTables);
+
+            if (transferTables.Any())
+                TargetTableSelectorComboBox.SelectedIndex = 0;
+        }
+
+        private void BudgetManagerForm_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void DescriptionTextBox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void CreateNewTableButton_Click(object sender, EventArgs e)
+        {
+            string newTableName = NewTableNameInput.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(newTableName))
+            {
+                MessageBox.Show("Please enter a valid table name.");
+                return;
+            }
+
+            try
+            {
+                _repository.CreateNewTable(newTableName);
+                MessageBox.Show($"Table '{newTableName}' created successfully.");
+
+                LoadTableNames();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to create table: {ex.Message}");
+            }
+        }
+
+        private void TransferRecord()
+        {
+            string destinationTable = TargetTableSelectorComboBox.SelectedItem?.ToString();
+            if (string.IsNullOrEmpty(destinationTable))
+            {
+                MessageBox.Show("Please select a destination table.");
+                return;
+            }
+
+            if (currentTableName == "" || destinationTable == "")
+                return;
+
+            if (!DataGridHelper.GetSelectedRowId(dataGridView, out int id))
+                return;
+
+            var confirm = MessageBox.Show(
+                $"Are you sure you want to transfer this record to {destinationTable}?",
+                "Transfer record",
+                MessageBoxButtons.YesNo);
+
+            if (confirm != DialogResult.Yes) return;
+
+            _repository.TransferRecord(id, currentTableName, destinationTable);
+        }
+
+        private void TransferRecordButton_Click(object sender, EventArgs e)
+        {
+            TransferRecord();
+            DisplayTransactionsInDataTable();
         }
     }
 }

@@ -5,11 +5,14 @@ namespace FamilyBudgetManager.TransactionsRepository
     public interface ITransactionRepository
     {
         DataTable ReadAllTransactions(string tableName);
-        void Write(string category, string description, string amount, DateTime date);
-        void Update(int id, string category, string description, string amount, DateTime date);
-        void Delete(int id);
+        void Write(string category, string description, string amount, DateTime date, string tableName);
+        void Update(int id, string category, string description, string amount, DateTime date, string tableName);
+        void Delete(int id, string tableName);
         void CreateNewIfNotExists();
-        double GetSumFromCategory(string typeOfTransaction);
+        double GetSumFromCategory(string typeOfTransaction, string tableName);
         public List<string> GetAllTableNames();
+        void TransferRecord(int id, string sourceTable, string destinationTable);
+        void CreateNewTable(string tableName);
+        void DeleteTable(string tableName);
     }
 }
