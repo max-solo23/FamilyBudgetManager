@@ -87,6 +87,7 @@ namespace FamilyBudgetManager
             TargetTableSelectorComboBox = new ComboBox();
             TransferRecordButton = new Button();
             TransferArrowLabel = new Label();
+            this.DeleteTableButton = new Button();
             ((System.ComponentModel.ISupportInitialize)dataGridView).BeginInit();
             SuspendLayout();
             // 
@@ -124,7 +125,6 @@ namespace FamilyBudgetManager
             DescriptionTextBox.Name = "DescriptionTextBox";
             DescriptionTextBox.Size = new Size(567, 23);
             DescriptionTextBox.TabIndex = 3;
-            DescriptionTextBox.TextChanged += DescriptionTextBox_TextChanged;
             // 
             // AmountLabel
             // 
@@ -282,10 +282,10 @@ namespace FamilyBudgetManager
             // 
             // NewTableNameInput
             // 
-            NewTableNameInput.Location = new Point(161, 12);
+            NewTableNameInput.Location = new Point(350, 12);
             NewTableNameInput.Name = "NewTableNameInput";
             NewTableNameInput.PlaceholderText = "New Table Name";
-            NewTableNameInput.Size = new Size(391, 23);
+            NewTableNameInput.Size = new Size(202, 23);
             NewTableNameInput.TabIndex = 21;
             // 
             // TargetTableSelectorComboBox
@@ -316,9 +316,20 @@ namespace FamilyBudgetManager
             TransferArrowLabel.TabIndex = 24;
             TransferArrowLabel.Text = "->";
             // 
+            // DeleteTableButton
+            // 
+            this.DeleteTableButton.Location = new Point(166, 8);
+            this.DeleteTableButton.Name = "DeleteTableButton";
+            this.DeleteTableButton.Size = new Size(113, 29);
+            this.DeleteTableButton.TabIndex = 25;
+            this.DeleteTableButton.Text = "Delete Table";
+            this.DeleteTableButton.UseVisualStyleBackColor = true;
+            this.DeleteTableButton.Click += this.DeleteTableButton_Click;
+            // 
             // BudgetManagerForm
             // 
             ClientSize = new Size(875, 611);
+            Controls.Add(this.DeleteTableButton);
             Controls.Add(TransferArrowLabel);
             Controls.Add(TransferRecordButton);
             Controls.Add(TargetTableSelectorComboBox);
@@ -346,7 +357,6 @@ namespace FamilyBudgetManager
             Controls.Add(CategoryLabel);
             Name = "BudgetManagerForm";
             Text = "Family Budget Manager";
-            Load += BudgetManagerForm_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridView).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -522,16 +532,6 @@ namespace FamilyBudgetManager
                 TargetTableSelectorComboBox.SelectedIndex = 0;
         }
 
-        private void BudgetManagerForm_Load(object sender, EventArgs e)
-        {
-
-        }
-
-        private void DescriptionTextBox_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void CreateNewTableButton_Click(object sender, EventArgs e)
         {
             string newTableName = NewTableNameInput.Text.Trim();
@@ -584,6 +584,41 @@ namespace FamilyBudgetManager
         {
             TransferRecord();
             DisplayTransactionsInDataTable();
+        }
+
+        private void DeleteTableButton_Click(object sender, EventArgs e)
+        {
+            DeleteTable();
+            LoadTableNames();
+            DisplayTransactionsInDataTable();
+            UpdateViewLabels();
+        }
+
+        private void DeleteTable()
+        {
+            string tableToDelete = TableSelectorComboBox.SelectedItem?.ToString();
+
+            if (string.IsNullOrEmpty(tableToDelete))
+            {
+                MessageBox.Show("Please select a table to delete.");
+                return;
+            }
+
+            var confirm = MessageBox.Show(
+                $"Are you sure you want to delete this table: {tableToDelete}?",
+                "Delete table",
+                MessageBoxButtons.YesNo);
+
+            if (confirm != DialogResult.Yes) return;
+
+            try
+            {
+                _repository.DeleteTable(tableToDelete);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error deleting table: {ex.Message}");
+            }
         }
     }
 }

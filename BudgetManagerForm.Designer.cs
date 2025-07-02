@@ -39,5 +39,6 @@
         private ComboBox TargetTableSelectorComboBox;
         private Button TransferRecordButton;
         private Label TransferArrowLabel;
+        private Button DeleteTableButton;
     }
 }
