@@ -15,8 +15,11 @@ namespace FamilyBudgetManager
         public BudgetManagerForm(ITransactionRepository repository)
         {
             _repository = repository;
-            _repository.CreateNewIfNotExists();
             InitializeComponent();
+            if (!AnyTableNames())
+            {
+                CreateDefaultTable();
+            }
             LoadTableNames();
             UpdateTargetTableSelectorComboBox();
             DisplayTransactionsInDataTable();
@@ -25,6 +28,20 @@ namespace FamilyBudgetManager
             AmountTextBox.KeyPress += AmountTextBox_OnlyPositiveInteger_KeyPress;
             printDocument.PrintPage += PrintDocument_PrintPage;
             TableSelectorComboBox.SelectedIndexChanged += TableSelectorComboBox_SelectedIndexChanged;
+        }
+
+        private bool AnyTableNames()
+        {
+            var tables = _repository.GetAllTableNames();
+
+            if (tables == null || tables.Count == 0)
+            {
+                MessageBox.Show("No tables found in the database.");
+                TableSelectorComboBox.Items.Clear();
+                return false;
+            }
+
+            return true;
         }
 
         private void TableSelectorComboBox_SelectedIndexChanged(object? sender, EventArgs e)
@@ -618,6 +635,19 @@ namespace FamilyBudgetManager
             catch (Exception ex)
             {
                 MessageBox.Show($"Error deleting table: {ex.Message}");
+            }
+        }
+
+        private void CreateDefaultTable()
+        {
+            try
+            {
+                _repository.CreateDefaultTable();
+                MessageBox.Show("Default table was created.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error creating default table: {ex.Message}");
             }
         }
     }

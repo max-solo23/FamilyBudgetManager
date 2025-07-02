@@ -8,7 +8,7 @@ namespace FamilyBudgetManager.TransactionsRepository
         void Write(string category, string description, string amount, DateTime date, string tableName);
         void Update(int id, string category, string description, string amount, DateTime date, string tableName);
         void Delete(int id, string tableName);
-        void CreateNewIfNotExists();
+        void CreateDefaultTable();
         double GetSumFromCategory(string typeOfTransaction, string tableName);
         public List<string> GetAllTableNames();
         void TransferRecord(int id, string sourceTable, string destinationTable);

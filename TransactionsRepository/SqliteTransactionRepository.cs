@@ -75,11 +75,11 @@ namespace FamilyBudgetManager.TransactionsRepository
             command.ExecuteNonQuery();
         }
 
-        public void CreateNewIfNotExists()
+        public void CreateDefaultTable()
         {
             using var connection = new SQLiteConnection(dbPath);
             connection.Open();
-            string query = @"CREATE TABLE IF NOT EXISTS Transactions (
+            string query = @"CREATE TABLE IF NOT EXISTS DefaultTable (
                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                                 category TEXT NOT NULL CHECK (category IN ('Income', 'Expense')),
                                 description TEXT NOT NULL,
@@ -92,16 +92,21 @@ namespace FamilyBudgetManager.TransactionsRepository
 
         public double GetSumFromCategory(string typeOfTransaction, string tableName)
         {
-            using var connection = new SQLiteConnection(dbPath);
-            connection.Open();
-            string query = $@"SELECT SUM(amount) 
-                             FROM [{tableName}] 
-                             WHERE category = @typeOfTransaction;";
-            using var command = new SQLiteCommand(query, connection);
-            command.Parameters.AddWithValue("@typeOfTransaction", typeOfTransaction);
+            if (!string.IsNullOrEmpty(tableName))
+            {
+                using var connection = new SQLiteConnection(dbPath);
+                connection.Open();
+                string query = $@"SELECT SUM(amount) 
+                                 FROM [{tableName}] 
+                                 WHERE category = @typeOfTransaction;";
+                using var command = new SQLiteCommand(query, connection);
+                command.Parameters.AddWithValue("@typeOfTransaction", typeOfTransaction);
 
-            object result = command.ExecuteScalar();
-            return result != DBNull.Value ? Convert.ToDouble(result) : 0.0;
+                object result = command.ExecuteScalar();
+                return result != DBNull.Value ? Convert.ToDouble(result) : 0.0;
+            }
+
+            return 0;
         }
 
         public void Update(int id, string category, string description, string amount, DateTime date, string tableName)
