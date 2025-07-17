@@ -11,6 +11,7 @@ namespace FamilyBudgetManager.TransactionsRepository
         void CreateDefaultTable();
         double GetSumFromCategory(string typeOfTransaction, string tableName);
         public List<string> GetAllTableNames();
+        void CopyRecord(int id, string sourceTable, string destinationTable);
         void TransferRecord(int id, string sourceTable, string destinationTable);
         void CreateNewTable(string tableName);
         void DeleteTable(string tableName);

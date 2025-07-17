@@ -104,7 +104,8 @@ namespace FamilyBudgetManager
             TargetTableSelectorComboBox = new ComboBox();
             TransferRecordButton = new Button();
             TransferArrowLabel = new Label();
-            this.DeleteTableButton = new Button();
+            DeleteTableButton = new Button();
+            CopyRecordButton = new Button();
             ((System.ComponentModel.ISupportInitialize)dataGridView).BeginInit();
             SuspendLayout();
             // 
@@ -335,18 +336,29 @@ namespace FamilyBudgetManager
             // 
             // DeleteTableButton
             // 
-            this.DeleteTableButton.Location = new Point(166, 8);
-            this.DeleteTableButton.Name = "DeleteTableButton";
-            this.DeleteTableButton.Size = new Size(113, 29);
-            this.DeleteTableButton.TabIndex = 25;
-            this.DeleteTableButton.Text = "Delete Table";
-            this.DeleteTableButton.UseVisualStyleBackColor = true;
-            this.DeleteTableButton.Click += this.DeleteTableButton_Click;
+            DeleteTableButton.Location = new Point(166, 8);
+            DeleteTableButton.Name = "DeleteTableButton";
+            DeleteTableButton.Size = new Size(113, 29);
+            DeleteTableButton.TabIndex = 25;
+            DeleteTableButton.Text = "Delete Table";
+            DeleteTableButton.UseVisualStyleBackColor = true;
+            DeleteTableButton.Click += DeleteTableButton_Click;
+            // 
+            // CopyRecordButton
+            // 
+            CopyRecordButton.Location = new Point(405, 396);
+            CopyRecordButton.Name = "CopyRecordButton";
+            CopyRecordButton.Size = new Size(113, 29);
+            CopyRecordButton.TabIndex = 26;
+            CopyRecordButton.Text = "Copy Record";
+            CopyRecordButton.UseVisualStyleBackColor = true;
+            CopyRecordButton.Click += CopyRecordButton_Click;
             // 
             // BudgetManagerForm
             // 
             ClientSize = new Size(875, 611);
-            Controls.Add(this.DeleteTableButton);
+            Controls.Add(CopyRecordButton);
+            Controls.Add(DeleteTableButton);
             Controls.Add(TransferArrowLabel);
             Controls.Add(TransferRecordButton);
             Controls.Add(TargetTableSelectorComboBox);
@@ -572,6 +584,31 @@ namespace FamilyBudgetManager
             }
         }
 
+        private void CopyRecord()
+        {
+            string destinationTable = TargetTableSelectorComboBox.SelectedItem?.ToString();
+            if (string.IsNullOrEmpty(destinationTable))
+            {
+                MessageBox.Show("Please select a destination table.");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(currentTableName) || string.IsNullOrEmpty(destinationTable))
+                return;
+
+            if (!DataGridHelper.GetSelectedRowId(dataGridView, out int id))
+                return;
+
+            var confirm = MessageBox.Show(
+                $"Are you sure you want to copy this record to {destinationTable}?",
+                "Copy record",
+                MessageBoxButtons.YesNo);
+
+            if (confirm != DialogResult.Yes) return;
+
+            _repository.CopyRecord(id, currentTableName, destinationTable);
+        }
+
         private void TransferRecord()
         {
             string destinationTable = TargetTableSelectorComboBox.SelectedItem?.ToString();
@@ -649,6 +686,11 @@ namespace FamilyBudgetManager
             {
                 MessageBox.Show($"Error creating default table: {ex.Message}");
             }
+        }
+
+        private void CopyRecordButton_Click(object sender, EventArgs e)
+        {
+            CopyRecord();
         }
     }
 }

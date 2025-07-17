@@ -40,5 +40,6 @@
         private Button TransferRecordButton;
         private Label TransferArrowLabel;
         private Button DeleteTableButton;
+        private Button CopyRecordButton;
     }
 }

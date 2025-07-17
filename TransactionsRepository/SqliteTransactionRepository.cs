@@ -177,6 +177,42 @@ namespace FamilyBudgetManager.TransactionsRepository
             command.ExecuteNonQuery();
         }
 
+        public void CopyRecord(int id, string sourceTable, string destinationTable)
+        {
+            using var connection = new SQLiteConnection(dbPath);
+            connection.Open();
+
+            using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                string selectSql = $"SELECT * FROM [{sourceTable}] WHERE id = @id";
+                using var selectCmd = new SQLiteCommand(selectSql, connection, transaction);
+                selectCmd.Parameters.AddWithValue("@id", id);
+
+                using var reader = selectCmd.ExecuteReader();
+
+                if (!reader.Read())
+                    throw new Exception($"Record with id {id} not found in {sourceTable}.");
+
+                string category = reader["category"].ToString();
+                string description = reader["description"].ToString();
+                string amount = reader["amount"].ToString();
+                DateTime date = DateTime.Parse(reader["date"].ToString());
+
+                reader.Close();
+
+                Write(category, description, amount, date, destinationTable, connection, transaction);
+
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
+
         public void TransferRecord(int id, string sourceTable, string destinationTable)
         {
             using var connection = new SQLiteConnection(dbPath);
