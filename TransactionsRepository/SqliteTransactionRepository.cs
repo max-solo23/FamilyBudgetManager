@@ -109,6 +109,25 @@ namespace FamilyBudgetManager.TransactionsRepository
             return 0;
         }
 
+        public double GetSumByFilter(string tableName, string filterColumn, string filterValue)
+        {
+            if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(filterColumn))
+                return 0;
+
+            using var connection = new SQLiteConnection(dbPath);
+            connection.Open();
+
+            string query = $@"SELECT SUM(amount) 
+                      FROM [{tableName}] 
+                      WHERE [{filterColumn}] = @filterValue;";
+
+            using var command = new SQLiteCommand(query, connection);
+            command.Parameters.AddWithValue("@filterValue", filterValue);
+
+            object result = command.ExecuteScalar();
+            return result != DBNull.Value ? Convert.ToDouble(result) : 0.0;
+        }
+
         public void Update(int id, string category, string description, string amount, DateTime date, string tableName)
         {
             using var connection = new SQLiteConnection(dbPath);

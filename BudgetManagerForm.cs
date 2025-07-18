@@ -75,6 +75,18 @@ namespace FamilyBudgetManager
             DatePicker.Value = DateTime.TryParse(row.Cells["date"].Value.ToString(), out DateTime date)
                 ? date
                 : DateTime.Today;
+
+            if (TotalAmountForDescriptionCheckBox.Checked)
+            {
+                var currentTableName = TableSelectorComboBox.SelectedItem?.ToString();
+                var descriptionText = DescriptionTextBox.Text;
+                var sumByDescription = _repository.GetSumByFilter(currentTableName, "description", descriptionText);
+                TotalAmountForDescriptionLabel.Text = sumByDescription.ToString();
+            }
+            else
+            {
+                TotalAmountForDescriptionLabel.Text = "0";
+            }
         }
 
         private void InitializeComponent()
@@ -106,6 +118,8 @@ namespace FamilyBudgetManager
             TransferArrowLabel = new Label();
             DeleteTableButton = new Button();
             CopyRecordButton = new Button();
+            TotalAmountForDescriptionLabel = new Label();
+            TotalAmountForDescriptionCheckBox = new CheckBox();
             ((System.ComponentModel.ISupportInitialize)dataGridView).BeginInit();
             SuspendLayout();
             // 
@@ -354,9 +368,32 @@ namespace FamilyBudgetManager
             CopyRecordButton.UseVisualStyleBackColor = true;
             CopyRecordButton.Click += CopyRecordButton_Click;
             // 
+            // TotalAmountForDescriptionLabel
+            // 
+            TotalAmountForDescriptionLabel.AutoSize = true;
+            TotalAmountForDescriptionLabel.Location = new Point(545, 528);
+            TotalAmountForDescriptionLabel.Name = "TotalAmountForDescriptionLabel";
+            TotalAmountForDescriptionLabel.Size = new Size(13, 15);
+            TotalAmountForDescriptionLabel.TabIndex = 27;
+            TotalAmountForDescriptionLabel.Text = "0";
+            // 
+            // TotalAmountForDescriptionCheckBox
+            // 
+            TotalAmountForDescriptionCheckBox.AutoSize = true;
+            TotalAmountForDescriptionCheckBox.Checked = true;
+            TotalAmountForDescriptionCheckBox.CheckState = CheckState.Checked;
+            TotalAmountForDescriptionCheckBox.Location = new Point(350, 527);
+            TotalAmountForDescriptionCheckBox.Name = "TotalAmountForDescriptionCheckBox";
+            TotalAmountForDescriptionCheckBox.Size = new Size(190, 19);
+            TotalAmountForDescriptionCheckBox.TabIndex = 28;
+            TotalAmountForDescriptionCheckBox.Text = "Total Amount for [Description]:";
+            TotalAmountForDescriptionCheckBox.UseVisualStyleBackColor = true;
+            // 
             // BudgetManagerForm
             // 
             ClientSize = new Size(875, 611);
+            Controls.Add(TotalAmountForDescriptionCheckBox);
+            Controls.Add(TotalAmountForDescriptionLabel);
             Controls.Add(CopyRecordButton);
             Controls.Add(DeleteTableButton);
             Controls.Add(TransferArrowLabel);

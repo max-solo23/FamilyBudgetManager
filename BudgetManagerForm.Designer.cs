@@ -41,5 +41,7 @@
         private Label TransferArrowLabel;
         private Button DeleteTableButton;
         private Button CopyRecordButton;
+        private Label TotalAmountForDescriptionLabel;
+        private CheckBox TotalAmountForDescriptionCheckBox;
     }
 }
